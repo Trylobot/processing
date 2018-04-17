@@ -1,9 +1,10 @@
+import java.util.Arrays;
 
-int node_count = 35;
-int edges_per_node = 2;
+int node_count = 48;
+int edges_per_node = 4;
 
-Node[] nodes = new Node[node_count];
-ArrayList<Edge> edges = new ArrayList<Edge>();
+Node[] nodes; //<>//
+ArrayList<Edge> edges;
 
 
 void setup() {
@@ -16,6 +17,7 @@ void setup() {
 void generate() {
 
   // bokeh
+  nodes = new Node[node_count];
   for (int i = 0; i < node_count; i++) {
     Node n = new Node();
     n.c = color(221, 61, 100, 0.2);
@@ -25,14 +27,19 @@ void generate() {
   }
 
   // lattice
-  edges.clear();
+  edges = new ArrayList<Edge>();
   for (int i = 0; i < node_count; i++) {
+    Edge[] others = new Edge[node_count];
     for (int j = 0; j < node_count; j++) {
       Edge e = new Edge();
       e.n0 = nodes[i];
       e.n1 = nodes[j];
       e.d = PVector.dist(e.n0.p, e.n1.p);
-      edges.add(e);
+      others[j] = e;
+    }
+    Arrays.sort(others);
+    for (int k = 1; k <= edges_per_node; k++) {
+      edges.add(others[k]);
     }
   }
 }
@@ -43,10 +50,17 @@ class Node {
   public float r;
 }
 
-class Edge {
+class Edge implements Comparable<Edge>{
   public Node n0;
   public Node n1;
   public float d;
+  
+  public int compareTo(Edge e) {
+    float diff = this.d - e.d;
+    if (diff < 0) return -1;
+    else if (diff > 0) return 1;
+    else return 0;
+  }
 }
 
 void draw() {
