@@ -11,13 +11,12 @@ ArrayList<Edge> edges;
 
 void setup() {
   size(800, 600);
-  
-  colorMode(HSB, 360, 100, 100, 1.0);
-
   generate();
 }
 
 void generate() {
+
+  colorMode(HSB, 360, 100, 100, 1.0);
 
   // bokeh
   nodes = new Node[node_count];
