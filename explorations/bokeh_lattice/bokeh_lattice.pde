@@ -1,14 +1,17 @@
 import java.util.Arrays;
 
 int node_count = 48;
-int edges_per_node = 4;
+int edges_per_node = 5;
+float blur_chance = 0.20f;
+float[] blur_range = {0.0f, 2.0f};
 
-Node[] nodes; //<>//
+Node[] nodes;
 ArrayList<Edge> edges;
 
 
 void setup() {
   size(800, 600);
+  
   colorMode(HSB, 360, 100, 100, 1.0);
 
   generate();
@@ -22,7 +25,11 @@ void generate() {
     Node n = new Node();
     n.c = color(221, 61, 100, 0.2);
     n.p = new PVector(random(0, width), random(0, height));
-    n.r = random(20, 250);
+    n.r = random(width/400f, width/3.2f);
+    n.b = 0.0f;
+    if (random(0,1) < blur_chance) {
+      n.b = random(blur_range[0], blur_range[1]);
+    }
     nodes[i] = n;
   }
 
@@ -45,15 +52,16 @@ void generate() {
 }
 
 class Node {
-  public int c;
-  public PVector p;
-  public float r;
+  public int c; // color
+  public PVector p; // position
+  public float r; // radius
+  public float b; // blur amount (affects all previous)
 }
 
 class Edge implements Comparable<Edge>{
   public Node n0;
   public Node n1;
-  public float d;
+  public float d; // distance
   
   public int compareTo(Edge e) {
     float diff = this.d - e.d;
@@ -71,11 +79,15 @@ void draw() {
     noStroke();
     fill( n.c );
     ellipse( n.p.x, n.p.y, n.r, n.r );
+    if (n.b > 0.0f) {
+      filter(BLUR, n.b);
+    }
   }
 
   // lattice
   for (Edge e : edges) {
-    stroke(#FFFFFF);
+    strokeWeight(0.5);
+    stroke(#FFFFFF,0.5);
     noFill();
     line( e.n0.p.x,e.n0.p.y, e.n1.p.x,e.n1.p.y );
   }
