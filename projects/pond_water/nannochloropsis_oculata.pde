@@ -7,7 +7,7 @@ PGraphics Nannochloropsis_Oculata( float scale, int blur ) {
   
   // diameter range of organism, in micrometers
   float[] diameter_range = { 2.0f, 3.0f };
-  float wall = 0.05f;
+  float wall = 0.025f;
   int organelle_count = 50;
 
   float diameter = scale * random( diameter_range[0],diameter_range[1] );
@@ -35,7 +35,7 @@ PGraphics Nannochloropsis_Oculata( float scale, int blur ) {
   
   // cell wall effects
   g.noFill();
-  g.strokeWeight( 3.0f * wall * scale );
+  g.strokeWeight( 6.0f * wall * scale );
   g.stroke( color( 0,0,100, 1.0 ));
   g.ellipse( center,center, diameter,diameter );
 
