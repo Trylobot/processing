@@ -1,46 +1,67 @@
-import java.util.Arrays;
+import java.util.Collections;
 
-
-float pixels_per_micrometer = 10.0f; 
-
-int count = 12;
-Entity[] guys = new Entity[count];
+final int Nannochloropsis_Oculata__ID = 100;
 
 
 void setup() {
   size( 800,800 );
   noLoop();
+  colorMode( HSB, 360,100,100, 1.0 );
 }
 
 void draw() {
-  // generate  
-  colorMode( HSB, 360,100,100, 1.0 );
+  float pixels_per_micrometer = 48.0f;
+  float max_blur_factor = 0.25f;  
+  int count = 20;
   
+  ArrayList<Entity> guys = new ArrayList<Entity>();
   for (int i = 0; i < count; ++i) {
-    Entity e = new Entity();
-    e.organism = new Nannochloropsis_Oculata();
-    e.position = new PVector( random(0,width), random(0,height) );
-    e.depth = random( -5, 5 );
-    guys[i] = e;
+    guys.add(new Entity());
   }
   
-  Arrays.sort(guys);
+  for (Entity e : guys) {
+    e.species = Nannochloropsis_Oculata__ID;
+    e.position = new PVector( random(0,width), random(0,height) );
+    e.scale = pixels_per_micrometer;
+    e.z = random(-1,1);
+    e.blur = int( 
+      (max_blur_factor * pixels_per_micrometer) * 
+      (sqrt(abs(e.z)) * Math.signum(e.z)) );
+  }
+  Collections.sort(guys);
+  
+  // reduce entity overlap
+  //nudge( guys );
   
   // draw  
   background( color( 251,2,90, 1.0 ));
   
+  // this project simulates a light microscope; each organism absorbs some of the light
   imageMode( CENTER );
-  for (int i = 0; i < count; ++i) {
-    Entity e = guys[i];
-    e.organism.render(
-      pixels_per_micrometer, 
-      abs(int(e.depth + 0.5f)) );
-    image( e.organism.g, 
-      e.position.x,e.position.y,
-      e.organism.w,e.organism.h );
+  for (Entity e : guys) {
+    switch (e.species) {
+      case Nannochloropsis_Oculata__ID:
+        e.g = Nannochloropsis_Oculata( e.scale, e.blur ); break; 
+    }
+  }
+  for (Entity e : guys) {
+    pushMatrix();
+    tint( 255, 0.50f + (0.15f - (0.15f * e.z)) );
+    translate( e.position.x,e.position.y );
+    rotate( random( 0, TWO_PI ));
+    image( e.g, 0,0, e.g.width,e.g.height );
+    popMatrix();
   }
   
-  selectOutput("Save Image", "fileSelected");
+}
+
+void mousePressed() {
+  if (mouseButton == LEFT) {
+    redraw();
+  }
+  else if (mouseButton == RIGHT) {
+    selectOutput("Save Image", "fileSelected");
+  }
 }
 
 void fileSelected(File selection) {
@@ -51,21 +72,16 @@ void fileSelected(File selection) {
 
 //-------------------------
 
-public class Organism {
-  public PGraphics g;
-  public int w;
-  public int h;
-  
-  void render( float scale, int blur ) {}
-}
-
 public class Entity implements Comparable<Entity> {
-  public Organism organism;
+  public int species;
+  public PGraphics g;
   public PVector position;
-  public float depth; // zero: at focal point, positive: behind focal plane, negative: in front of focal plane
+  public float scale;
+  public float z;
+  public int blur;
   
   public int compareTo(Entity e) {
-    float diff = this.depth - e.depth;
+    float diff = this.z - e.z;
     if (diff < 0) return -1;
     else if (diff > 0) return 1;
     else return 0;
