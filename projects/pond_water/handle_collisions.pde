@@ -21,14 +21,13 @@ ArrayList<Entity> handle_collisions( ArrayList<Entity> guys ) {
       // this uses two assumptions from Nannochloropsis_Oculata:
       // 1. organisms are both circular
       // 2. PGraphics created has a padding equal to 50% of organism diameter
-      float collide_dist = 0.25f * float(max( e0.g.width,   e0.g.height   ))
-                         + 0.25f * float(max( e0_n.g.width, e0_n.g.height )); 
-      PVector diff = PVector.sub( e0.p, e0_n.p );
+      float collide_dist = e0.organism.collision_radius() + e0_n.organism.collision_radius(); 
+      PVector diff = PVector.sub( e0.position, e0_n.position );
       float actual_dist = diff.mag();
       if (actual_dist < collide_dist) {
         // circle/circle collision detected
         PVector translation = diff.copy().setMag( diff, 0.5f * (collide_dist - actual_dist));
-        e1.p.add( translation );
+        e1.position.add( translation );
       }
     }
   }
