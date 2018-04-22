@@ -37,12 +37,14 @@ public class Nannochloropsis_Oculata implements Organism {
     for (int x = 0; x < g.width; ++x) {
       for (int y = 0; y < g.height; ++y) {
         int i = x + y*g.width;
-        g.pixels[i] = color( 
-          69f + ((82f-69f)*noise( x*0.008, y*0.008,  0f )),
-          70f + ((95f-70f)*noise( x*0.010, y*0.010,  5f )),
-          29f + ((90f-29f)*noise( x*0.020, y*0.020, 10f )),
-          alpha(g.pixels[i])
-        );
+        float a = alpha(g.pixels[i]);
+        if (a > 0) {
+          g.pixels[i] = color(
+            69f + ((82f-69f)*noise( x*0.008, y*0.008,  0f )),
+            70f + ((95f-70f)*noise( x*0.010, y*0.010,  5f )),
+            29f + ((90f-29f)*noise( x*0.020, y*0.020, 10f )),
+            a );
+        }
       }
     }
     g.updatePixels();
