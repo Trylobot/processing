@@ -9,7 +9,7 @@ void setup() {
 
 void draw() {
   float pixels_per_micrometer = 48.0f; // effective zoom
-  float max_blur_factor = 0.25f; // max blurriness (apparent depth)
+  float max_blur_factor = 0.20f; // max blurriness (apparent depth)
   int count = 20;
   
   ArrayList<Entity> guys = new ArrayList<Entity>();

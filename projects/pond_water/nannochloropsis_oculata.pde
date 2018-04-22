@@ -17,8 +17,8 @@ public class Nannochloropsis_Oculata implements Organism {
   
   public PGraphics render( float scale, int blur ) {
     float wall_thickness = 0.025f;
-    //int organelle_count = 50;
-  
+    int organelle_count = 50;
+    
     int size = int(2.0f * diameter); // organism content + 50% padding on all sides
     float center = 0.5f * size;
     
@@ -26,26 +26,32 @@ public class Nannochloropsis_Oculata implements Organism {
     g.beginDraw();
     g.colorMode( HSB, 360,100,100, 1.0 );
     g.clear();
-  
-    // dark cell wall line
+
+    // cell interior
+    float interior_diameter = diameter - (6.0f * wall_thickness * scale);
+    g.noStroke();
+    g.fill( color( 0,0,100, 1.0 ));
+    g.ellipse( center,center, interior_diameter,interior_diameter );
+    g.loadPixels();
+    // sample some noise
+    for (int x = 0; x < g.width; ++x) {
+      for (int y = 0; y < g.height; ++y) {
+        int i = x + y*g.width;
+        g.pixels[i] = color( 
+          69f + ((82f-69f)*noise( x*0.008, y*0.008,  0f )),
+          70f + ((95f-70f)*noise( x*0.010, y*0.010,  5f )),
+          29f + ((90f-29f)*noise( x*0.020, y*0.020, 10f )),
+          alpha(g.pixels[i])
+        );
+      }
+    }
+    g.updatePixels();
+
+    // cell wall
     g.noFill();
     g.strokeWeight( wall_thickness * scale );
     g.stroke( color( 240,100,33, 1.0 ));
     g.ellipse( center,center, diameter,diameter );
-    
-    // cell interior
-    // - base color: circular gradient
-    g.noStroke();
-    int c0 = color( 69,76,83, 1.0 );
-    int c1 = color( 79,75,62, 1.0 );
-    int radius = int( 0.5f * diameter - (3.0f * wall_thickness * scale ));
-    for (int i = radius; i > 0; i--) {
-      int c = lerpColor( c0,c1, (float(i) / float(radius)) ); 
-      g.fill( c );
-      g.ellipse( center,center, 2 * i,2 * i );
-    }
-    // - cell "organelles"
-    
     
     // depth of field
     g.filter( BLUR, blur );
