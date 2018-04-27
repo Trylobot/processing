@@ -1,6 +1,10 @@
 import java.util.Collections;
 
 
+float pixels_per_micrometer = 48.0f; // effective zoom
+float max_blur_factor = 0.16f; // max blurriness (apparent depth)
+int count = 20;
+
 void setup() {
   size( 800,800 );
   noLoop();
@@ -8,10 +12,6 @@ void setup() {
 }
 
 void draw() {
-  float pixels_per_micrometer = 48.0f; // effective zoom
-  float max_blur_factor = 0.20f; // max blurriness (apparent depth)
-  int count = 20;
-  
   ArrayList<Entity> guys = new ArrayList<Entity>();
   for (int i = 0; i < count; ++i) {
     guys.add(new Entity());
@@ -20,7 +20,7 @@ void draw() {
   for (Entity e : guys) {
     e.organism = new Nannochloropsis_Oculata();
     e.organism.init( pixels_per_micrometer );
-    e.position.set( random(0,width), random(0,height), random(-1,1) );
+    e.position.set( random(0,width), random(0,height), random(-0.8,0.8) );
   }
   // reduce overlap by nudging them around a bit
   guys = handle_collisions( guys );
@@ -29,8 +29,10 @@ void draw() {
   // set blur as a function of depth (middleground = zero blur)
   //   simulates circle of confusion used in depth of field
   for (Entity e : guys) {
-    e.blur = int((max_blur_factor * pixels_per_micrometer)
-                 * (sqrt(abs(e.position.z)) * Math.signum(e.position.z)) );
+    e.blur = int(
+      max_blur_factor *
+      pixels_per_micrometer *
+      sqrt(abs(e.position.z)) );
   }
   
   // draw  
@@ -47,7 +49,11 @@ void draw() {
     blendMode(DARKEST);
     translate( e.position.x,e.position.y );
     rotate( random( 0, TWO_PI ));
+    //tint( 0xFFFFFFFF );
     image( e.graphics, 0,0, e.graphics.width,e.graphics.height );
+    //blendMode(LIGHTEST);
+    //tint( 0xFFFFFFFF );
+    //image( e.graphics, 0,0, e.graphics.width,e.graphics.height );
     popMatrix();
   }
   
