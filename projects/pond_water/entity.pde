@@ -1,24 +1,23 @@
 
-interface Organism {
-  public void init( float scale );  
-  public PGraphics render( float scale, int blur );
-  public float collision_radius();
-}
-
 class Entity implements Comparable<Entity> {
+  // step 1: placement
   public Organism organism;
-  public PGraphics graphics; // graphics / render-to-texture target
   public PVector position = new PVector(); // position (3D)
-  public int blur; // blur amount (due to position.z)
+  public float orientation; // angle of orientation
+  public float blur; // blur amount (due to position.z)
+  // step 2: graphics layers
+  public ArrayList<TextureLayer> textures;
   
-  public Entity() {}
   
-  public Entity( Entity e ) {
-    this.organism = e.organism;
-    this.graphics = e.graphics; // reference copy
-    this.position.set( e.position );
-    this.blur = e.blur;
-  }
+  public Entity() { }
+  
+  public Entity(Entity other) {
+    this.organism = other.organism;
+    this.position = other.position.copy();
+    this.orientation = other.orientation;
+    this.blur = other.blur;
+    this.textures = null; // do not copy this; instead, re-render
+  }  
   
   // natural sort: position.z
   public int compareTo( Entity e ) {
@@ -28,3 +27,15 @@ class Entity implements Comparable<Entity> {
     else return 0;
   }
 }
+
+class TextureLayer {
+  public PGraphics graphics; // graphics / render-to-texture target
+  public int blend_mode; // for blendMode(...)
+}
+
+interface Organism {
+  public void init( float scale );  
+  public float collision_radius();
+  public ArrayList<TextureLayer> render( float scale, float blur );
+}
+  

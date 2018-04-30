@@ -3,10 +3,6 @@
 //   https://www.nutraingredients-usa.com/Article/2013/09/25/New-algae-omega-3s-player-Qualitas-goes-head-to-head-with-krill
 //   https://en.wikipedia.org/wiki/Nannochloropsis
 
-int noise_lumpy_radii_x = 0;
-int noise_interior_bg_x = 0;
-int noise_interior_bg_y = 0;
-
 public class Nannochloropsis_Oculata implements Organism {
   public float diameter;
   
@@ -19,101 +15,111 @@ public class Nannochloropsis_Oculata implements Organism {
     return 0.5f * diameter;
   }
   
-  public PGraphics render( float scale, int blur ) {
-    float wall_thickness = 0.025f;
-    int organelle_count = 50;
-    
+  public ArrayList<TextureLayer> render( float scale, float blur ) {
     int size = int(2.0f * diameter); // organism content + 50% padding on all sides
     float center = 0.5f * size;
+    float wall_thickness = 0.025f;
     
-    PGraphics g = createGraphics( size,size );
-    g.beginDraw();
-    g.colorMode( HSB, 360,100,100, 1.0 );
-    g.clear();
+    ArrayList<TextureLayer> textures = new ArrayList<TextureLayer>(2);
+
+    TextureLayer base = new TextureLayer();
+    textures.add( base );
+    base.blend_mode = DARKEST;
+    PGraphics bg = createGraphics( size,size );
+    base.graphics = bg;
+    
+    bg.beginDraw();
+    bg.colorMode( HSB, 360,100,100, 1.0 );
+    bg.ellipseMode( CENTER );
+    bg.clear();
+    bg.translate( center,center );
 
     float interior_diameter = diameter - (6.0f * wall_thickness * scale);
-    PShape cell = g.createShape();
-    cell.beginShape();
-    float ang, 
-          step = TWO_PI / 180.0f, 
-          radius = (0.5f * 1.005f * interior_diameter),
-          noisy_radius,
-          noise_step = 0.025f;
-    for (ang = 0; ang <= TWO_PI; ang += step) {
-      noisy_radius = radius - (0.10f * radius * noise(noise_step * float(noise_lumpy_radii_x)));
-      noise_lumpy_radii_x += 1; // global
-      // noisy radii make the shape look "lumpy"
-      cell.vertex(
-        noisy_radius * cos(ang),
-        noisy_radius * sin(ang) );
-    }
-    cell.endShape();
+    ///////////
+    PShape cell = lumpy_circle( bg, 
+      (0.5f * 1.005f * interior_diameter), // radius
+      0.12f, // lumpiness factor
+      90, // vertices
+      1.5f, // noise step
+      (blur * size) ); // noise offset
+    ///////////
     // inner line (dark, but follows "lumpy" contour shape)
-    g.noFill();
-    g.strokeWeight( 2.0f * wall_thickness * scale );
-    g.stroke( color( 240,100,33, 1.0 ));
-    g.scale(1.05f);
-    g.shape( cell, center,center );
+    bg.noFill();
+    bg.strokeWeight( 6.0f * wall_thickness * scale );
+    bg.stroke( color( 240,100,33, 1.0 ));
+    bg.scale(1.05f);
+    bg.shape( cell, 0,0 );
     // cell interior fill, serves as alpha mask for color
-    g.noStroke();
-    g.fill( color( 0,0,100, 1.0 ));
-    g.scale(1f);
-    g.shape( cell, center,center );
+    bg.noStroke();
+    bg.fill( color( 0,0,100, 1.0 ));
+    bg.scale(1f);
+    bg.shape( cell, 0,0 );
     ///////////////
     // sample some noise and paint directly onto the graphics buffer
-    g.loadPixels();
+    bg.loadPixels();
     int x, y, i, n_x, n_y;
     float r, h, s, v, a;
     PVector p = new PVector();
-    for (x = 0; x < g.width; ++x) {
-      for (y = 0; y < g.height; ++y) {
-        i = x + y*g.width;
-        a = alpha(g.pixels[i]);
+    for (x = 0; x < bg.width; ++x) {
+      for (y = 0; y < bg.height; ++y) {
+        i = x + y*bg.width;
+        a = alpha(bg.pixels[i]);
         if (a > 0) {
           // base
-          n_x = x + noise_interior_bg_x;
-          n_y = y + noise_interior_bg_y;
-          h = 69f + (82f-69f)*noise( x*0.008, y*0.008,  0f );
-          s = 70f + (95f-70f)*noise( x*0.010, y*0.010,  5f );
-          v = 29f + (90f-29f)*noise( x*0.020, y*0.020, 10f );
+          n_x = x + int(blur * size);
+          n_y = y + int(blur * size);
+          h = 69f + (82f-69f)*noise( n_x*0.008, n_y*0.008,  0f );
+          s = 70f + (95f-70f)*noise( n_x*0.010, n_y*0.010,  5f );
+          v = 29f + (90f-29f)*noise( n_x*0.020, n_y*0.020, 10f );
           // cell shape overlay
           p.set(x, y);
           r = tan(0.70f + 0.50f*(1.0f - (p.sub(center, center).mag() / (0.5f*diameter))));
-          g.pixels[i] = color(
+          bg.pixels[i] = color(
             h, s, r*v, 0.80f*a );
         }
       }
     }
-    g.updatePixels();
-    noise_interior_bg_x += g.width; // uniqueness of this organism
-    noise_interior_bg_y += g.height;
+    bg.updatePixels();
 
     // cell wall lines
     // outer line (outermost dark line)
-    g.noFill();
-    g.strokeWeight( wall_thickness * scale );
-    g.stroke( color( 240,100,33, 1.0 ));
-    g.ellipse( center,center, diameter,diameter );
-    // outer line (outermost white line)
-    // this is supposed to be a white line but it doesn't seem to have any effect at all
-    // could be because of the blend mode in the final composition
-    g.noFill();
-    g.strokeWeight( 0.25f * wall_thickness * scale );
-    g.stroke( color( 240,100,100, 1.0 ));
-    g.ellipse( center,center, (wall_thickness * scale) + diameter,(wall_thickness * scale) + diameter );
+    bg.noFill();
+    bg.strokeWeight( wall_thickness * scale );
+    bg.stroke( color( 240,100,33, 1.0 ));
+    bg.ellipse( 0,0, diameter,diameter );
     
-    //// bright donut
-    //float blur_factor = 2.0f*float(blur) / (max_blur_factor*pixels_per_micrometer);
-    //g.noFill();
-    //g.strokeWeight( 2.0f*blur_factor );
-    //g.stroke( color( 68, 100, 100, 10.0f*blur_factor ));
-    //g.ellipse( center,center, interior_diameter,interior_diameter );
+    // circle of confusion / depth of field, simulated
+    bg.filter( BLUR, blur );
     
-    // depth of field
-    g.filter( BLUR, blur );
+    bg.endDraw();
     
-    g.endDraw();
+    //////////////////////////////////////////////////////////////
+    // "bright donut" layer (most visible when out of focus)
+    TextureLayer fore = new TextureLayer();
+    textures.add( fore );
     
-    return g;
+    fore.blend_mode = LIGHTEST;
+    PGraphics fg = createGraphics( size,size );
+    fore.graphics = fg;
+    
+    fg.beginDraw();
+    fg.colorMode( HSB, 360,100,100, 1.0 );
+    fg.ellipseMode( CENTER );
+    fg.clear();
+    fg.translate( center,center );
+  
+    float blur_factor = (blur / max_blur);
+    float donut_thickness = 8f + (16f * blur_factor);
+    float alpha = 0.35f + (0.45f * blur_factor); //0.5f - (0.5f * (blur / (max_blur_factor * pixels_per_micrometer)));
+    float d = interior_diameter - (0.5f * donut_thickness);
+    fg.noFill();
+    fg.strokeWeight( donut_thickness );
+    fg.stroke( color( 68,100,100, alpha ));
+    fg.ellipse( 0,0, d,d );
+    fg.filter( BLUR, (3f * blur_factor) );
+    fg.filter( BLUR, (3f * blur_factor) );
+    fg.endDraw();
+    
+    return textures;
   }
 }
