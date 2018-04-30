@@ -16,7 +16,8 @@ def main(args):
   parser = argparse.ArgumentParser(description='Scrape Google images')
   parser.add_argument('-s', '--search', default='bananas', type=str, help='search term')
   parser.add_argument('-n', '--num_images', default=10, type=int, help='num images to save')
-  parser.add_argument('-d', '--directory', default='/Users/gene/Downloads/', type=str, help='save directory')
+  parser.add_argument('-d', '--directory', default=os.path.join(os.environ['HOME'], 'Downloads'), 
+                      type=str, help='save directory')
   args = parser.parse_args()
   query = args.search#raw_input(args.search)
   max_images = args.num_images
