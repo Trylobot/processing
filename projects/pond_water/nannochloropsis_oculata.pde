@@ -16,6 +16,7 @@ public class Nannochloropsis_Oculata implements Organism {
   }
   
   public ArrayList<TextureLayer> render( float scale, float blur ) {
+    float blur_factor = (blur / max_blur);
     int size = int(2.0f * diameter); // organism content + 50% padding on all sides
     float center = 0.5f * size;
     float wall_thickness = 0.025f;
@@ -108,9 +109,8 @@ public class Nannochloropsis_Oculata implements Organism {
     fg.clear();
     fg.translate( center,center );
   
-    float blur_factor = (blur / max_blur);
-    float donut_thickness = 8f + (16f * blur_factor);
-    float alpha = 0.35f + (0.45f * blur_factor); //0.5f - (0.5f * (blur / (max_blur_factor * pixels_per_micrometer)));
+    float donut_thickness = (0.08f * diameter) + (0.16f * blur_factor * diameter);
+    float alpha = 0.40f + (0.30f * blur_factor);
     float d = interior_diameter - (0.5f * donut_thickness);
     fg.noFill();
     fg.strokeWeight( donut_thickness );
